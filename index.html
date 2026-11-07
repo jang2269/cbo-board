@@ -1,0 +1,50 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CBO 관제 · 신사업 파이프라인</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{background:#0e1116;color:#e6edf3;font-family:system-ui,"Malgun Gothic",sans-serif;padding:20px}
+h1{font-size:19px}h1 span{color:#7d8590;font-size:12px;font-weight:400;margin-left:8px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0}
+.k{background:#161b22;border:1px solid #21262d;border-radius:9px;padding:13px 15px}
+.k .lb{font-size:11px;color:#7d8590}.k .v{font-size:23px;font-weight:700;margin-top:5px}
+table{width:100%;border-collapse:collapse;background:#161b22;border:1px solid #21262d;border-radius:9px;overflow:hidden;font-size:13px}
+th{font-size:11px;color:#7d8590;text-align:left;padding:10px 12px;border-bottom:1px solid #21262d}
+td{padding:10px 12px;border-bottom:1px solid #1b2027;vertical-align:top}
+tr:last-child td{border-bottom:0}.sub{color:#8b949e;font-size:11px}
+select{background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:4px 6px;font-size:12px}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:12px;color:#8b949e}
+button{background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}
+@media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}table{font-size:12px}td,th{padding:8px}}
+</style></head><body>
+<h1>CBO 관제 — 신사업 파이프라인<span id="up"></span></h1>
+<div class="kpis" id="k"></div>
+<div class="bar"><button onclick="exportJson()">JSON 복사</button><span id="msg"></span></div>
+<table><thead><tr><th>ID</th><th>고객</th><th>담당/연락</th><th>상품</th><th class="num">제안가</th><th>단계</th><th class="num">확률</th><th>다음 액션</th></tr></thead><tbody id="tb"></tbody></table>
+<script>
+const SEED=[{"id":"vn-01","country":"VN","type":"학원·유학원","name":"C-Korea","city":"호치민","contact":"사이트 문의 폼 / 대표","phone":"","product":"파일럿 4주 20명","price":1500000,"cost":100000,"stage":"신규","owner":"대표","next":"첫 연락(Zalo/이메일)","prob":70},{"id":"vn-02","country":"VN","type":"학원·유학원","name":"껀터한국어교육센터","city":"껀터","contact":"대표 문성","phone":"0965570730","product":"EPS 대비반 보조 6개월","price":2000000,"cost":150000,"stage":"신규","owner":"대표","next":"전화/Zalo","prob":65},{"id":"vn-03","country":"VN","type":"학원","name":"하노이 사설 한국어학원 A","city":"하노이","contact":"원장","phone":"","product":"파일럿 4주","price":1000000,"cost":100000,"stage":"발굴","owner":"CBO","next":"후보 확정(30곳 중)","prob":55},{"id":"vn-04","country":"VN","type":"학원","name":"하노이 사설 한국어학원 B","city":"하노이","contact":"원장","phone":"","product":"파일럿 4주","price":1000000,"cost":100000,"stage":"발굴","owner":"CBO","next":"후보 확정","prob":55},{"id":"vn-05","country":"VN","type":"대학","name":"다낭외국어대 한국어학과","city":"다낭","contact":"학과장","phone":"","product":"학기 라이선스 100명","price":2500000,"cost":200000,"stage":"신규","owner":"대표","next":"교수 채널 접촉","prob":50},{"id":"vn-06","country":"VN","type":"학원","name":"호치민 사설학원 C","city":"호치민","contact":"원장","phone":"","product":"파일럿+교재","price":1000000,"cost":100000,"stage":"발굴","owner":"CBO","next":"후보 확정","prob":50},{"id":"vn-07","country":"VN","type":"정부기관","name":"하노이한국교육원","city":"하노이","contact":"교육실장","phone":"+84-24-3203-2082","product":"강좌 보조","price":0,"cost":0,"stage":"보류","owner":"CBO","next":"표준교재 우선정책 확인","prob":20},{"id":"vn-08","country":"VN","type":"기업","name":"삼성전자 베트남 법인","city":"박닌","contact":"인사·교육팀","phone":"","product":"연간 라이선스","price":20000000,"cost":2000000,"stage":"보류","owner":"대표","next":"벤더 등록 절차 확인","prob":20},{"id":"kr-01","country":"KR","type":"지자체","name":"파주시 여성가족과","city":"파주","contact":"한국어교육 담당","phone":"031-940-4491","product":"수탁기관 납품","price":3000000,"cost":300000,"stage":"보류","owner":"CBO","next":"공고 종료(2/13) — 차년도 대비","prob":15},{"id":"kr-02","country":"KR","type":"센터","name":"전남광주외국인주민지원센터","city":"광주","contact":"교육 담당","phone":"062-714-2732","product":"자습 라이선스","price":2000000,"cost":200000,"stage":"신규","owner":"CBO","next":"전화 질문 3개","prob":45},{"id":"kr-03","country":"KR","type":"센터","name":"울산 외국인주민·근로자 통합지원센터","city":"울산","contact":"한국어교육 담당","phone":"052-235-7100","product":"라이선스","price":3000000,"cost":300000,"stage":"신규","owner":"CBO","next":"직영/위탁 확인","prob":40},{"id":"kr-04","country":"KR","type":"센터","name":"인천외국인근로자지원센터","city":"인천","contact":"운영 담당","phone":"","product":"산업안전 한국어","price":5000000,"cost":1500000,"stage":"신규","owner":"CBO","next":"현 수탁기관 파악","prob":35},{"id":"kr-05","country":"KR","type":"지자체","name":"안산시 외국인주민행정과","city":"안산","contact":"외국인주민권익팀","phone":"1666-1234","product":"컨소시엄 납품","price":0,"cost":0,"stage":"보류","owner":"대표","next":"접수 11/11 종료 후 파트너 접촉","prob":10}];
+const STAGES=['발굴','신규','연락','미팅','계약','입금','보류'];
+const KEY='cbo_leads_v1';
+let leads=(()=>{try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):SEED.slice();}catch(e){return SEED.slice();}})();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(leads));document.getElementById('msg').textContent='저장됨(이 브라우저)';setTimeout(()=>document.getElementById('msg').textContent='',1500);}catch(e){}}
+function kpi(){
+  const pipe=leads.reduce((a,b)=>a+(b.price||0),0);
+  return{leads:leads.length,hot:leads.filter(l=>(l.prob||0)>=50).length,pipe,contract:leads.filter(l=>l.stage==='계약').length,deposit:leads.filter(l=>l.stage==='입금').length};
+}
+function render(){
+  const k=kpi();
+  document.getElementById('k').innerHTML=[['전체 리드',k.leads],['확률 50%+',k.hot],['파이프라인',(k.pipe/10000).toFixed(0)+'만'],['계약',k.contract],['입금',k.deposit]]
+    .map(([a,b])=>'<div class="k"><div class="lb">'+a+'</div><div class="v">'+b+'</div></div>').join('');
+  document.getElementById('tb').innerHTML=leads.slice().sort((x,y)=>(y.prob||0)-(x.prob||0)).map(l=>{
+    const opts=STAGES.map(s=>'<option'+(s===l.stage?' selected':'')+'>'+s+'</option>').join('');
+    return '<tr><td class="sub">'+l.id+'</td><td><b>'+l.name+'</b><div class="sub">'+(l.city||'')+' · '+(l.type||'')+'</div></td>'+
+      '<td class="sub">'+(l.contact||'')+'<br>'+(l.phone||'-')+'</td><td>'+(l.product||'')+'</td>'+
+      '<td class="num">'+(l.price?(l.price/10000).toFixed(0)+'만':'-')+'</td>'+
+      '<td><select onchange="setStage(\\''+l.id+'\\',this.value)">'+opts+'</select></td>'+
+      '<td class="num">'+(l.prob||0)+'%</td><td class="sub">'+(l.next||'')+'</td></tr>';
+  }).join('');
+}
+function setStage(id,v){const l=leads.find(x=>x.id===id);if(l){l.stage=v;l.updated_at=new Date().toISOString();save();render();}}
+function exportJson(){const t=JSON.stringify({updated:new Date().toISOString(),leads},null,1);navigator.clipboard&&navigator.clipboard.writeText(t);document.getElementById('msg').textContent='JSON 복사됨';}
+document.getElementById('up').textContent='2026-11-07 기준 · 13건';
+render();
+</script></body></html>
